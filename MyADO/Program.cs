@@ -11,7 +11,7 @@ namespace MyADO
     class Program
     {
         const string collectionUri = "https://dev.azure.com/powerbi";
-        const string pat = "64gsO8qa8PrxgdhTlLKSFHRdSD8YCKy1LCfSvSIzFzAPcSjzWPkkJQQJ99AJACAAAAAAArohAAASAZDODB5c";
+        const string pat = "";
         static List<string> teamMembers =
             new List<string> {
                 "xiaoqiao@microsoft.com",
@@ -45,18 +45,22 @@ namespace MyADO
 
         public static void visit(commit commit, string scope)
         {
-            var l = commit.ListOneLayerItems(scope);
-            foreach (var result in l)
-            {
-                if (!result.IsFolder || result.Path.Equals(scope))
-                    continue;
-                int target = commit.GetCommitsOnABranchAndInAPath(result.Path, teamMembers);
-                if (target > 5)
-                    Console.WriteLine(result.Path + ":" + target);
+            
+            int target = commit.GetCommitsOnABranchAndInAPath(scope, teamMembers);
+         //   if (target > 5)
+                Console.WriteLine(scope + ":" + target);
 
-                // visit children only if the contribution in parent is not big enough.
-                if (target < 50)
+            // visit children only if the contribution in parent is not big enough.
+            if (target < 50)
+            {
+
+                var l = commit.ListOneLayerItems(scope);
+                foreach (var result in l)
+                {
+                    if (!result.IsFolder || result.Path.Equals(scope))
+                        continue;
                     visit(commit, result.Path);
+                }
             }
         }
 
@@ -67,7 +71,7 @@ namespace MyADO
             // Connect to Azure DevOps Services
             var connection = new VssConnection(new Uri(collectionUri), creds);
             var commit = new commit(connection);
-            visit(commit, "/");
+            visit(commit, "/trident");
 
             Console.ReadLine();
         }

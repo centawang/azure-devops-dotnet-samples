@@ -90,20 +90,21 @@ namespace MyADO
             };
             
             int total = 0;
-            int currentCounter = 0;
-            int target;
+            int currentRound = 0;
+            int target=0;
             do
             {
-                total += currentCounter;
+                
 
                 var result = this.client
                     .GetCommitsAsync(repo.Id, criteria, skip: total).Result;
-                target = result.Select(a => committer.Contains(a.Committer.Email)).Count();
-                
-                currentCounter = result.Count;
-                
-            } while (currentCounter == 100 && total < 1000 );
-            return total >= 1000? -1 : (target * 1 / 10);
+                target += result.Select(a => committer.Contains(a.Committer.Email)).Count();
+
+                currentRound = result.Count;
+                total += currentRound;
+
+            } while (currentRound == 100 && total < 1000 );
+            return total >= 1000? -1 : (target * 100 / total);
             }
 
             public List<GitCommitRef> GetCommitsInDateRange()
