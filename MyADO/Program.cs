@@ -54,7 +54,9 @@ namespace MyADO
                 if (target > 5)
                     Console.WriteLine(result.Path + ":" + target);
 
-                visit(commit, result.Path);
+                // visit children only if the contribution in parent is not big enough.
+                if (target < 50)
+                    visit(commit, result.Path);
             }
         }
 
