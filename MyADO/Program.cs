@@ -11,8 +11,6 @@ namespace MyADO
     class Program
     {
         const string collectionUri = "https://dev.azure.com/powerbi";
-        const string projectName = "PowerBIClients";
-        const string repoName = "PowerBIClients";
         const string pat = "64gsO8qa8PrxgdhTlLKSFHRdSD8YCKy1LCfSvSIzFzAPcSjzWPkkJQQJ99AJACAAAAAAArohAAASAZDODB5c";
 
         static void Main(string[] args)
@@ -22,15 +20,14 @@ namespace MyADO
             // Connect to Azure DevOps Services
             var connection = new VssConnection(new Uri(collectionUri), creds);
 
-            // Get a GitHttpClient to talk to the Git endpoints
-            var gitClient = connection.GetClient<GitHttpClient>();
+            var commit = new commit(connection);
+            var r = commit.GetCommitsInDateRange();
+            foreach (var result in r)
+            {
+                Console.WriteLine(result.Author.Email, result.CommitId);
+            }
 
-            // Get data about a specific repository
-            var repo = gitClient.GetRepositoryAsync(projectName, repoName).Result;
-
-            var branch = repo.DefaultBranch;
-
-            Console.WriteLine(branch);
+            Console.ReadLine();
         }
     }
 }
