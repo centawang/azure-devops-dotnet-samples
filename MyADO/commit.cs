@@ -23,7 +23,13 @@ namespace MyADO
 
         }
 
-            public List<GitCommitRef> GetAllCommits()
+        public IEnumerable<GitItem> ListOneLayerItems(string scopePath)
+        {
+            List<GitItem> items = client.GetItemsAsync(repo.Id, scopePath: scopePath, recursionLevel: VersionControlRecursionType.OneLevel).Result;
+            return items;
+        }
+
+        public List<GitCommitRef> GetAllCommits()
             {
 
                 return this.client
@@ -65,22 +71,39 @@ namespace MyADO
                     }).Result;
             }
 
-            public List<GitCommitRef> GetCommitsOnABranchAndInAPath()
+            public int GetCommitsOnABranchAndInAPath(string scopePath, List<string> committer)
             {
                 string branchName = repo.DefaultBranch;
-                string branchNameWithoutRefsHeads = branchName.Remove(0, "refs/heads/".Length);
+            string branchNameWithoutRefsHeads = branchName.Remove(0, "refs/heads/".Length);
 
-                return this.client
-                    .GetCommitsAsync(repo.Id, new GitQueryCommitsCriteria()
-                    {
-                        ItemVersion = new GitVersionDescriptor()
-                        {
-                            VersionType = GitVersionType.Branch,
-                            VersionOptions = GitVersionOptions.None,
-                            Version = branchNameWithoutRefsHeads
-                        },
-                        ItemPath = "/debug.log"
-                    }).Result;
+            var criteria = new GitQueryCommitsCriteria()
+            {
+                ItemVersion = new GitVersionDescriptor()
+                {
+                    VersionType = GitVersionType.Branch,
+                    VersionOptions = GitVersionOptions.None,
+                    Version = branchNameWithoutRefsHeads
+                },
+                ItemPath = scopePath,
+                FromDate = new DateTime(2021, 10, 1).ToString(),
+                ToDate = new DateTime(2024, 11, 1).ToString()
+            };
+            
+            int total = 0;
+            int currentCounter = 0;
+            int target;
+            do
+            {
+                total += currentCounter;
+
+                var result = this.client
+                    .GetCommitsAsync(repo.Id, criteria, skip: total).Result;
+                target = result.Select(a => committer.Contains(a.Committer.Email)).Count();
+                
+                currentCounter = result.Count;
+                
+            } while (currentCounter == 100 && total < 1000 );
+            return total >= 1000? -1 : (target * 1 / 10);
             }
 
             public List<GitCommitRef> GetCommitsInDateRange()
